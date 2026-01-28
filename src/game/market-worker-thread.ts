@@ -25,7 +25,7 @@ class SimpleOrderBook {
   }
 
   addOrder(order) {
-    if (order.side === "buy") {
+    if (order.side === 'buy') {
       this.bids.push(order);
       this.bids.sort((a, b) => {
         const priceDiff = (b.price || 0) - (a.price || 0);
@@ -45,7 +45,7 @@ class SimpleOrderBook {
     const order = this.orders.get(orderId);
     if (!order) return false;
 
-    if (order.side === "buy") {
+    if (order.side === 'buy') {
       this.bids = this.bids.filter((o) => o.id !== orderId);
     } else {
       this.asks = this.asks.filter((o) => o.id !== orderId);
@@ -64,18 +64,16 @@ class SimpleOrderBook {
       const askPrice = bestAsk.price;
 
       const canMatch =
-        bestBid.type === "market" ||
-        bestAsk.type === "market" ||
-        bidPrice !== undefined &&
-        askPrice !== undefined &&
-        bidPrice >= askPrice;
+        bestBid.type === 'market' ||
+        bestAsk.type === 'market' ||
+        (bidPrice !== undefined && askPrice !== undefined && bidPrice >= askPrice);
 
       if (!canMatch) break;
 
       let tradePrice;
-      if (bestBid.type === "market") {
+      if (bestBid.type === 'market') {
         tradePrice = askPrice ?? 0;
-      } else if (bestAsk.type === "market") {
+      } else if (bestAsk.type === 'market') {
         tradePrice = bidPrice ?? 0;
       } else {
         tradePrice = askPrice!;
@@ -134,7 +132,9 @@ class SimpleMarketEngine {
 
     // Box-Muller transform for normal distribution
     let u1, u2;
-    do { u1 = Math.random(); } while (u1 <= 0.00001);
+    do {
+      u1 = Math.random();
+    } while (u1 <= 0.00001);
     u2 = Math.random();
     const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 
@@ -177,7 +177,7 @@ class SimplePlayerSession {
   updateBalance(delta) {
     const newBalance = this.balance + delta;
     if (newBalance < 0) {
-      throw new Error("Insufficient balance");
+      throw new Error('Insufficient balance');
     }
     this.balance = newBalance;
   }
@@ -186,7 +186,7 @@ class SimplePlayerSession {
     const currentQuantity = this.inventory.get(itemId) ?? 0;
     const newQuantity = currentQuantity + delta;
     if (newQuantity < 0) {
-      throw new Error("Insufficient inventory");
+      throw new Error('Insufficient inventory');
     }
     if (newQuantity === 0) {
       this.inventory.delete(itemId);
@@ -208,7 +208,7 @@ function getPlayerSession(playerId) {
 function getPlayerSessionForOrder(order) {
   const session = getPlayerSession(order.playerId);
 
-  if (order.side === "sell" && !session.hasSufficientInventory(order.itemId, order.quantity)) {
+  if (order.side === 'sell' && !session.hasSufficientInventory(order.itemId, order.quantity)) {
     session.updateInventory(order.itemId, 1000);
   }
 
@@ -217,7 +217,7 @@ function getPlayerSessionForOrder(order) {
 
 let orderBook;
 let marketEngine;
-let playerSessions = new Map();
+const playerSessions = new Map();
 
 function initialize(itemId, initialPrice) {
   orderBook = new SimpleOrderBook();
@@ -227,34 +227,34 @@ function initialize(itemId, initialPrice) {
 function handleSubmitOrder(order) {
   const session = getPlayerSessionForOrder(order);
 
-  if (order.side === "buy") {
+  if (order.side === 'buy') {
     const cost = (order.price || 0) * order.quantity;
     if (!session.hasSufficientBalance(cost)) {
-      return { type: "error", message: "Insufficient balance" };
+      return { type: 'error', message: 'Insufficient balance' };
     }
     session.updateBalance(-cost);
   } else {
     if (!session.hasSufficientInventory(order.itemId, order.quantity)) {
-      return { type: "error", message: "Insufficient inventory" };
+      return { type: 'error', message: 'Insufficient inventory' };
     }
     session.updateInventory(order.itemId, -order.quantity);
   }
 
   orderBook.addOrder(order);
-  return { type: "order-submitted", orderId: order.id, trades: [] };
+  return { type: 'order-submitted', orderId: order.id, trades: [] };
 }
 
 function handleCancelOrder(orderId) {
   const success = orderBook.removeOrder(orderId);
   if (success) {
-    return { type: "order-cancelled", orderId };
+    return { type: 'order-cancelled', orderId };
   }
-  return { type: "error", message: "Order not found" };
+  return { type: 'error', message: 'Order not found' };
 }
 
 function handleGetOrderBook() {
   return {
-    type: "order-book",
+    type: 'order-book',
     bids: orderBook.getBids(),
     asks: orderBook.getAsks(),
   };
@@ -265,13 +265,13 @@ function handleTick() {
   const trades = orderBook.matchOrders();
 
   return {
-    type: "tick-completed",
+    type: 'tick-completed',
     trades,
     currentPrice: marketEngine.getCurrentPrice(),
   };
 }
 
-self.onmessage = function(event) {
+self.onmessage = function (event) {
   const data = event.data;
   const response = handleMessage(data);
 
@@ -285,26 +285,26 @@ self.onmessage = function(event) {
 function handleMessage(data) {
   try {
     switch (data.type) {
-      case "initialize":
+      case 'initialize':
         initialize(data.itemId, data.initialPrice);
-        return { type: "order-submitted", orderId: "", trades: [] };
+        return { type: 'order-submitted', orderId: '', trades: [] };
 
-      case "submit-order":
+      case 'submit-order':
         return handleSubmitOrder(data.order);
 
-      case "cancel-order":
+      case 'cancel-order':
         return handleCancelOrder(data.orderId);
 
-      case "get-order-book":
+      case 'get-order-book':
         return handleGetOrderBook();
 
-      case "tick":
+      case 'tick':
         return handleTick();
 
       default:
-        return { type: "error", message: "Unknown message type" };
+        return { type: 'error', message: 'Unknown message type' };
     }
   } catch (error) {
-    return { type: "error", message: error.message };
+    return { type: 'error', message: error.message };
   }
 }

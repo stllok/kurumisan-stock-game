@@ -18,29 +18,29 @@
  * Workers themselves run as separate Bun threads (managed by Bun runtime).
  */
 
-import type { Order, Trade } from "./types";
-import { OrderBook } from "./order-book";
-import { MarketEngine } from "./market-engine";
-import { PlayerSession } from "./player-session";
+import type { Order, Trade } from './types';
+import { OrderBook } from './order-book';
+import { MarketEngine } from './market-engine';
+import { PlayerSession } from './player-session';
 
 /**
  * Worker message types for main thread → worker communication
  */
 export type WorkerMessage =
-  | { type: "submit-order"; order: Order }
-  | { type: "cancel-order"; orderId: string }
-  | { type: "get-order-book" }
-  | { type: "tick" };
+  | { type: 'submit-order'; order: Order }
+  | { type: 'cancel-order'; orderId: string }
+  | { type: 'get-order-book' }
+  | { type: 'tick' };
 
 /**
  * Worker response types for worker → main thread communication
  */
 export type WorkerResponse =
-  | { type: "order-submitted"; orderId: string; trades: Trade[] }
-  | { type: "order-cancelled"; orderId: string }
-  | { type: "order-book"; bids: Order[]; asks: Order[] }
-  | { type: "tick-completed"; trades: Trade[]; currentPrice: number }
-  | { type: "error"; message: string };
+  | { type: 'order-submitted'; orderId: string; trades: Trade[] }
+  | { type: 'order-cancelled'; orderId: string }
+  | { type: 'order-book'; bids: Order[]; asks: Order[] }
+  | { type: 'tick-completed'; trades: Trade[]; currentPrice: number }
+  | { type: 'error'; message: string };
 
 /**
  * Market worker state for crash recovery
@@ -116,7 +116,7 @@ export class MarketWorker {
 
     // Reject all pending responses
     for (const [messageId, callback] of this.pendingResponses) {
-      callback({ type: "error", message: "Worker stopped" });
+      callback({ type: 'error', message: 'Worker stopped' });
     }
     this.pendingResponses.clear();
   }
@@ -127,7 +127,7 @@ export class MarketWorker {
    * @returns Promise resolving to worker response
    */
   async submitOrder(order: Order): Promise<WorkerResponse> {
-    const message: WorkerMessage = { type: "submit-order", order };
+    const message: WorkerMessage = { type: 'submit-order', order };
     return this.sendMessage(message);
   }
 
@@ -137,7 +137,7 @@ export class MarketWorker {
    * @returns Promise resolving to worker response
    */
   async cancelOrder(orderId: string): Promise<WorkerResponse> {
-    const message: WorkerMessage = { type: "cancel-order", orderId };
+    const message: WorkerMessage = { type: 'cancel-order', orderId };
     return this.sendMessage(message);
   }
 
@@ -146,7 +146,7 @@ export class MarketWorker {
    * @returns Promise resolving to order book data
    */
   async getOrderBook(): Promise<WorkerResponse> {
-    const message: WorkerMessage = { type: "get-order-book" };
+    const message: WorkerMessage = { type: 'get-order-book' };
     return this.sendMessage(message);
   }
 
@@ -155,7 +155,7 @@ export class MarketWorker {
    * @returns Promise resolving to tick result
    */
   async tick(): Promise<WorkerResponse> {
-    const message: WorkerMessage = { type: "tick" };
+    const message: WorkerMessage = { type: 'tick' };
     return this.sendMessage(message);
   }
 
@@ -173,7 +173,7 @@ export class MarketWorker {
    */
   private async sendMessage(message: WorkerMessage): Promise<WorkerResponse> {
     if (!this.worker || !this.state.isRunning) {
-      return { type: "error", message: "Worker not running" };
+      return { type: 'error', message: 'Worker not running' };
     }
 
     const messageId = this.nextMessageId++;
@@ -184,7 +184,7 @@ export class MarketWorker {
       // Set timeout for response
       const timeout = setTimeout(() => {
         this.pendingResponses.delete(messageId);
-        resolve({ type: "error", message: "Worker response timeout" });
+        resolve({ type: 'error', message: 'Worker response timeout' });
       }, 5000);
 
       // Override resolve to clear timeout
@@ -205,10 +205,10 @@ export class MarketWorker {
    * Spawn a new Bun worker
    */
   private async spawnWorker(): Promise<void> {
-    const workerPath = import.meta.url.replace("market-worker.ts", "market-worker-thread.ts");
+    const workerPath = import.meta.url.replace('market-worker.ts', 'market-worker-thread.ts');
 
     this.worker = new Worker(workerPath, {
-      type: "module",
+      type: 'module',
     });
 
     // Set up message handler
@@ -231,7 +231,7 @@ export class MarketWorker {
 
     // Initialize worker with market state
     this.worker.postMessage({
-      type: "initialize",
+      type: 'initialize',
       itemId: this.itemId,
       initialPrice: this.state.initialPrice,
     });
@@ -301,12 +301,12 @@ export class WorkerPool {
    */
   async start(): Promise<void> {
     if (this.isRunning) {
-      console.warn("WorkerPool is already running");
+      console.warn('WorkerPool is already running');
       return;
     }
 
     this.isRunning = true;
-    console.log("WorkerPool started");
+    console.log('WorkerPool started');
   }
 
   /**
@@ -320,13 +320,11 @@ export class WorkerPool {
     this.isRunning = false;
 
     // Stop all workers
-    const stopPromises = Array.from(this.workers.values()).map((worker) =>
-      worker.stop()
-    );
+    const stopPromises = Array.from(this.workers.values()).map((worker) => worker.stop());
     await Promise.all(stopPromises);
 
     this.workers.clear();
-    console.log("WorkerPool stopped");
+    console.log('WorkerPool stopped');
   }
 
   /**
@@ -356,7 +354,7 @@ export class WorkerPool {
 
     if (!worker) {
       return {
-        type: "error",
+        type: 'error',
         message: `No worker for item ${order.itemId}`,
       };
     }
@@ -375,7 +373,7 @@ export class WorkerPool {
 
     if (!worker) {
       return {
-        type: "error",
+        type: 'error',
         message: `No worker for item ${itemId}`,
       };
     }
@@ -393,7 +391,7 @@ export class WorkerPool {
 
     if (!worker) {
       return {
-        type: "error",
+        type: 'error',
         message: `No worker for item ${itemId}`,
       };
     }
@@ -408,12 +406,10 @@ export class WorkerPool {
   async tickAll(): Promise<Map<string, WorkerResponse>> {
     const results = new Map<string, WorkerResponse>();
 
-    const tickPromises = Array.from(this.workers.entries()).map(
-      async ([itemId, worker]) => {
-        const result = await worker.tick();
-        results.set(itemId, result);
-      }
-    );
+    const tickPromises = Array.from(this.workers.entries()).map(async ([itemId, worker]) => {
+      const result = await worker.tick();
+      results.set(itemId, result);
+    });
 
     await Promise.all(tickPromises);
     return results;
@@ -429,7 +425,7 @@ export class WorkerPool {
 
     if (!worker) {
       return {
-        type: "error",
+        type: 'error',
         message: `No worker for item ${itemId}`,
       };
     }

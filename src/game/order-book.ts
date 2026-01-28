@@ -8,7 +8,7 @@
  * - Partial fills supported
  */
 
-import type { Order, OrderSide, Trade } from "./types";
+import type { Order, OrderSide, Trade } from './types';
 
 /**
  * Priority queue implementation with custom comparator
@@ -75,10 +75,7 @@ class PriorityQueue<T> {
       if (this.comparator(this.heap[index], this.heap[parentIndex]) >= 0) {
         break;
       }
-      [this.heap[index], this.heap[parentIndex]] = [
-        this.heap[parentIndex],
-        this.heap[index],
-      ];
+      [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
       index = parentIndex;
     }
   }
@@ -108,10 +105,7 @@ class PriorityQueue<T> {
         break;
       }
 
-      [this.heap[index], this.heap[swapIndex]] = [
-        this.heap[swapIndex],
-        this.heap[index],
-      ];
+      [this.heap[index], this.heap[swapIndex]] = [this.heap[swapIndex], this.heap[index]];
       index = swapIndex;
     }
   }
@@ -162,7 +156,7 @@ export class OrderBook {
    */
   addOrder(order: Order): void {
     // Add to appropriate heap based on side
-    if (order.side === "buy") {
+    if (order.side === 'buy') {
       this.bids.push(order);
     } else {
       this.asks.push(order);
@@ -184,7 +178,7 @@ export class OrderBook {
     }
 
     // Remove from appropriate heap
-    if (order.side === "buy") {
+    if (order.side === 'buy') {
       this.bids.remove((o) => o.id === orderId);
     } else {
       this.asks.remove((o) => o.id === orderId);
@@ -217,11 +211,9 @@ export class OrderBook {
 
       // Market orders or limit orders with crossing prices
       const canMatch =
-        bestBid.type === "market" ||
-        bestAsk.type === "market" ||
-        (bidPrice !== undefined &&
-          askPrice !== undefined &&
-          bidPrice >= askPrice);
+        bestBid.type === 'market' ||
+        bestAsk.type === 'market' ||
+        (bidPrice !== undefined && askPrice !== undefined && bidPrice >= askPrice);
 
       if (!canMatch) {
         break;
@@ -229,10 +221,10 @@ export class OrderBook {
 
       // Determine trade price
       let tradePrice: number;
-      if (bestBid.type === "market") {
+      if (bestBid.type === 'market') {
         // Market buy: use ask price
         tradePrice = askPrice ?? 0;
-      } else if (bestAsk.type === "market") {
+      } else if (bestAsk.type === 'market') {
         // Market sell: use bid price
         tradePrice = bidPrice ?? 0;
       } else {
@@ -265,7 +257,7 @@ export class OrderBook {
         this.orders.delete(bestBid.id);
       } else {
         // Partial fill: keep order with updated status
-        bestBid.status = "partial";
+        bestBid.status = 'partial';
       }
 
       if (bestAsk.quantity === 0) {
@@ -273,7 +265,7 @@ export class OrderBook {
         this.orders.delete(bestAsk.id);
       } else {
         // Partial fill: keep order with updated status
-        bestAsk.status = "partial";
+        bestAsk.status = 'partial';
       }
     }
 

@@ -1,13 +1,18 @@
-import { describe, it, expect } from "bun:test";
-import { Effect, Ref, Scope } from "effect";
-import { WorkerManager, createWorkerManager, createOrderProcessor, createPriceProvider } from "../worker-manager";
-import { OrderBook } from "../order-book";
-import { MarketEngine } from "../market-engine";
-import type { Order, Trade } from "../types";
+import { describe, it, expect } from 'bun:test';
+import { Effect, Ref, Scope } from 'effect';
+import {
+  WorkerManager,
+  createWorkerManager,
+  createOrderProcessor,
+  createPriceProvider,
+} from '../worker-manager';
+import { OrderBook } from '../order-book';
+import { MarketEngine } from '../market-engine';
+import type { Order, Trade } from '../types';
 
-describe("WorkerManager", () => {
-  describe("Factory Functions", () => {
-    it("should create a WorkerManager with default config", () => {
+describe('WorkerManager', () => {
+  describe('Factory Functions', () => {
+    it('should create a WorkerManager with default config', () => {
       const manager = createWorkerManager();
       expect(manager).toBeInstanceOf(WorkerManager);
       expect(manager.getStats()).toEqual({
@@ -21,7 +26,7 @@ describe("WorkerManager", () => {
       });
     });
 
-    it("should create a WorkerManager with custom config", () => {
+    it('should create a WorkerManager with custom config', () => {
       const manager = createWorkerManager({
         queueCapacity: 100,
         workerPoolSize: 2,
@@ -32,40 +37,40 @@ describe("WorkerManager", () => {
     });
   });
 
-  describe("Queue Processing", () => {
-    it("should enqueue orders", async () => {
+  describe('Queue Processing', () => {
+    it('should enqueue orders', async () => {
       const manager = createWorkerManager();
       const orderBook = new OrderBook();
       const processor = createOrderProcessor(orderBook);
       manager.setOrderProcessor(processor);
 
       const order: Order = {
-        id: "order-1",
-        playerId: "player-1",
-        itemId: "item-1",
-        type: "limit",
-        side: "buy",
+        id: 'order-1',
+        playerId: 'player-1',
+        itemId: 'item-1',
+        type: 'limit',
+        side: 'buy',
         quantity: 10,
         price: 100,
         timestamp: Date.now(),
-        status: "pending",
+        status: 'pending',
       };
 
       await manager.enqueueOrder(order);
       expect(manager.getQueueSize()).toBe(1);
     });
 
-    it("should enqueue market tick tasks", async () => {
+    it('should enqueue market tick tasks', async () => {
       const manager = createWorkerManager();
-      const engine = new MarketEngine("item-1", 100);
+      const engine = new MarketEngine('item-1', 100);
       const provider = createPriceProvider(engine);
       manager.setPriceProvider(provider);
 
-      await manager.enqueueMarketTick("item-1");
+      await manager.enqueueMarketTick('item-1');
       expect(manager.getQueueSize()).toBe(1);
     });
 
-    it("should handle multiple orders in sequence", async () => {
+    it('should handle multiple orders in sequence', async () => {
       const manager = createWorkerManager();
       const orderBook = new OrderBook();
       const processor = createOrderProcessor(orderBook);
@@ -73,26 +78,26 @@ describe("WorkerManager", () => {
 
       const orders: Order[] = [
         {
-          id: "order-1",
-          playerId: "player-1",
-          itemId: "item-1",
-          type: "limit",
-          side: "buy",
+          id: 'order-1',
+          playerId: 'player-1',
+          itemId: 'item-1',
+          type: 'limit',
+          side: 'buy',
           quantity: 10,
           price: 100,
           timestamp: Date.now(),
-          status: "pending",
+          status: 'pending',
         },
         {
-          id: "order-2",
-          playerId: "player-2",
-          itemId: "item-1",
-          type: "limit",
-          side: "sell",
+          id: 'order-2',
+          playerId: 'player-2',
+          itemId: 'item-1',
+          type: 'limit',
+          side: 'sell',
           quantity: 5,
           price: 105,
           timestamp: Date.now(),
-          status: "pending",
+          status: 'pending',
         },
       ];
 
@@ -103,24 +108,24 @@ describe("WorkerManager", () => {
       expect(manager.getQueueSize()).toBe(2);
     });
 
-    it("should check if queue is empty", () => {
+    it('should check if queue is empty', () => {
       const manager = createWorkerManager();
       expect(manager.isQueueEmpty()).toBe(true);
     });
 
-    it("should get current queue size", async () => {
+    it('should get current queue size', async () => {
       const manager = createWorkerManager();
 
       const orders: Order[] = [1, 2, 3].map((i) => ({
         id: `order-${i}`,
         playerId: `player-${i}`,
-        itemId: "item-1",
-        type: "limit" as const,
-        side: "buy" as const,
+        itemId: 'item-1',
+        type: 'limit' as const,
+        side: 'buy' as const,
         quantity: 10,
         price: 100,
         timestamp: Date.now(),
-        status: "pending" as const,
+        status: 'pending' as const,
       }));
 
       for (const order of orders) {
@@ -131,82 +136,82 @@ describe("WorkerManager", () => {
     });
   });
 
-  describe("PubSub Broadcasting", () => {
-    it("should create subscription Effect for market updates", async () => {
+  describe('PubSub Broadcasting', () => {
+    it('should create subscription Effect for market updates', async () => {
       const manager = createWorkerManager();
-      const engine = new MarketEngine("item-1", 100);
+      const engine = new MarketEngine('item-1', 100);
       const provider = createPriceProvider(engine);
       manager.setPriceProvider(provider);
 
-      const updateEffect = await manager.subscribeToMarket("item-1");
+      const updateEffect = await manager.subscribeToMarket('item-1');
 
       expect(updateEffect).toBeDefined();
-      expect(typeof updateEffect).toBe("object");
+      expect(typeof updateEffect).toBe('object');
     });
 
-    it("should enqueue market tick tasks for broadcasting", async () => {
+    it('should enqueue market tick tasks for broadcasting', async () => {
       const manager = createWorkerManager();
-      const engine = new MarketEngine("item-1", 100);
+      const engine = new MarketEngine('item-1', 100);
       const provider = createPriceProvider(engine);
       manager.setPriceProvider(provider);
 
-      await manager.enqueueMarketTick("item-1");
+      await manager.enqueueMarketTick('item-1');
       expect(manager.getQueueSize()).toBe(1);
     });
 
-    it("should track market update broadcasts in stats", () => {
+    it('should track market update broadcasts in stats', () => {
       const manager = createWorkerManager();
       const stats = manager.getStats();
       expect(stats.marketUpdatesBroadcast).toBe(0);
     });
   });
 
-  describe("Statistics Tracking", () => {
-    it("should track orders processed", () => {
+  describe('Statistics Tracking', () => {
+    it('should track orders processed', () => {
       const manager = createWorkerManager();
       const stats = manager.getStats();
       expect(stats.ordersProcessed).toBe(0);
     });
 
-    it("should track trades matched", () => {
+    it('should track trades matched', () => {
       const manager = createWorkerManager();
       const stats = manager.getStats();
       expect(stats.tradesMatched).toBe(0);
     });
 
-    it("should track worker uptime", () => {
+    it('should track worker uptime', () => {
       const manager = createWorkerManager();
       const stats = manager.getStats();
       expect(stats.uptime).toBe(0);
     });
 
-    it("should track active workers", () => {
+    it('should track active workers', () => {
       const manager = createWorkerManager({ workerPoolSize: 4 });
       const stats = manager.getStats();
       expect(stats.workersActive).toBe(0);
     });
 
-    it("should track last tick time", () => {
+    it('should track last tick time', () => {
       const manager = createWorkerManager();
       const stats = manager.getStats();
       expect(stats.lastTickTime).toBeGreaterThan(0);
     });
 
-    it("should track workers restarted", () => {
+    it('should track workers restarted', () => {
       const manager = createWorkerManager();
       const stats = manager.getStats();
       expect(stats.workersRestarted).toBe(0);
     });
   });
 
-  describe("Worker Lifecycle", () => {
-    it("should track shutdown when not running", async () => {
+  describe('Worker Lifecycle', () => {
+    it('should track shutdown when not running', async () => {
       const manager = createWorkerManager();
       await manager.gracefulShutdown();
       expect(manager.getStats().workersActive).toBe(0);
     });
 
-    it("should increment worker restarts", async () => {
+    it('should increment worker restarts', async () => {
       const manager = createWorkerManager();
 
       const initialRestarts = manager.getStats().workersRestarted;
@@ -218,20 +223,20 @@ describe("WorkerManager", () => {
     });
   });
 
-  describe("Error Handling", () => {
-    it("should handle orders without processor", async () => {
+  describe('Error Handling', () => {
+    it('should handle orders without processor', async () => {
       const manager = createWorkerManager();
 
       const order: Order = {
-        id: "order-1",
-        playerId: "player-1",
-        itemId: "item-1",
-        type: "limit",
-        side: "buy",
+        id: 'order-1',
+        playerId: 'player-1',
+        itemId: 'item-1',
+        type: 'limit',
+        side: 'buy',
         quantity: 10,
         price: 100,
         timestamp: Date.now(),
-        status: "pending",
+        status: 'pending',
       };
 
       await manager.enqueueOrder(order);
@@ -242,10 +247,10 @@ describe("WorkerManager", () => {
       expect(stats.ordersProcessed).toBe(0);
     });
 
-    it("should handle market ticks without price provider", async () => {
+    it('should handle market ticks without price provider', async () => {
       const manager = createWorkerManager();
 
-      await manager.enqueueMarketTick("item-1");
+      await manager.enqueueMarketTick('item-1');
 
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -253,45 +258,45 @@ describe("WorkerManager", () => {
       expect(stats.marketUpdatesBroadcast).toBe(0);
     });
 
-    it("should handle graceful shutdown when not running", async () => {
+    it('should handle graceful shutdown when not running', async () => {
       const manager = createWorkerManager();
       await manager.gracefulShutdown();
       expect(manager.getStats().workersActive).toBe(0);
     });
   });
 
-  describe("Integration with OrderBook and MarketEngine", () => {
-    it("should integrate with OrderBook for order processing", () => {
+  describe('Integration with OrderBook and MarketEngine', () => {
+    it('should integrate with OrderBook for order processing', () => {
       const orderBook = new OrderBook();
       const processor = createOrderProcessor(orderBook);
 
       const order: Order = {
-        id: "order-1",
-        playerId: "player-1",
-        itemId: "item-1",
-        type: "limit",
-        side: "buy",
+        id: 'order-1',
+        playerId: 'player-1',
+        itemId: 'item-1',
+        type: 'limit',
+        side: 'buy',
         quantity: 10,
         price: 100,
         timestamp: Date.now(),
-        status: "pending",
+        status: 'pending',
       };
 
       expect(() => processor(order)).not.toThrow();
     });
 
-    it("should integrate with MarketEngine for price updates", () => {
-      const engine = new MarketEngine("item-1", 100);
+    it('should integrate with MarketEngine for price updates', () => {
+      const engine = new MarketEngine('item-1', 100);
       const provider = createPriceProvider(engine);
 
-      expect(() => provider("item-1")).not.toThrow();
+      expect(() => provider('item-1')).not.toThrow();
     });
 
-    it("should get realistic price data from provider", async () => {
-      const engine = new MarketEngine("item-1", 100);
+    it('should get realistic price data from provider', async () => {
+      const engine = new MarketEngine('item-1', 100);
       const provider = createPriceProvider(engine);
 
-      const priceData = await provider("item-1");
+      const priceData = await provider('item-1');
 
       expect(priceData).toBeDefined();
       expect(priceData.price).toBe(100);
@@ -300,24 +305,24 @@ describe("WorkerManager", () => {
     });
   });
 
-  describe("Helper Functions", () => {
-    it("should create order processor from OrderBook", () => {
+  describe('Helper Functions', () => {
+    it('should create order processor from OrderBook', () => {
       const orderBook = new OrderBook();
       const processor = createOrderProcessor(orderBook);
 
       expect(processor).toBeInstanceOf(Function);
     });
 
-    it("should create price provider from MarketEngine", () => {
-      const engine = new MarketEngine("item-1", 100);
+    it('should create price provider from MarketEngine', () => {
+      const engine = new MarketEngine('item-1', 100);
       const provider = createPriceProvider(engine);
 
       expect(provider).toBeInstanceOf(Function);
     });
   });
 
-  describe("Worker Start and Stop", () => {
-    it("should start worker manager with scope", async () => {
+  describe('Worker Start and Stop', () => {
+    it('should start worker manager with scope', async () => {
       const manager = createWorkerManager({ workerPoolSize: 2 });
       const orderBook = new OrderBook();
       const processor = createOrderProcessor(orderBook);
@@ -331,7 +336,7 @@ describe("WorkerManager", () => {
       await manager.gracefulShutdown();
     });
 
-    it("should warn when already running", async () => {
+    it('should warn when already running', async () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
       const orderBook = new OrderBook();
       const processor = createOrderProcessor(orderBook);
@@ -346,7 +351,7 @@ describe("WorkerManager", () => {
       await manager.gracefulShutdown();
     });
 
-    it("should gracefully shutdown active workers", async () => {
+    it('should gracefully shutdown active workers', async () => {
       const manager = createWorkerManager({ workerPoolSize: 2 });
       const orderBook = new OrderBook();
       const processor = createOrderProcessor(orderBook);
@@ -362,7 +367,7 @@ describe("WorkerManager", () => {
       expect(manager.getStats().workersActive).toBe(0);
     });
 
-    it("should track restarts when worker is restarted", async () => {
+    it('should track restarts when worker is restarted', async () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
       const orderBook = new OrderBook();
       const processor = createOrderProcessor(orderBook);
@@ -377,23 +382,23 @@ describe("WorkerManager", () => {
     });
   });
 
-  describe("Private Methods Coverage", () => {
-    it("should process order with processor set", async () => {
+  describe('Private Methods Coverage', () => {
+    it('should process order with processor set', async () => {
       const manager = createWorkerManager();
       const orderBook = new OrderBook();
       const processor = createOrderProcessor(orderBook);
       manager.setOrderProcessor(processor);
 
       const order: Order = {
-        id: "order-1",
-        playerId: "player-1",
-        itemId: "item-1",
-        type: "limit",
-        side: "buy",
+        id: 'order-1',
+        playerId: 'player-1',
+        itemId: 'item-1',
+        type: 'limit',
+        side: 'buy',
         quantity: 10,
         price: 100,
         timestamp: Date.now(),
-        status: "pending",
+        status: 'pending',
       };
 
       await manager.enqueueOrder(order);
@@ -401,19 +406,19 @@ describe("WorkerManager", () => {
       expect(manager.getQueueSize()).toBe(1);
     });
 
-    it("should handle order processing without processor", async () => {
+    it('should handle order processing without processor', async () => {
       const manager = createWorkerManager();
 
       const order: Order = {
-        id: "order-1",
-        playerId: "player-1",
-        itemId: "item-1",
-        type: "limit",
-        side: "buy",
+        id: 'order-1',
+        playerId: 'player-1',
+        itemId: 'item-1',
+        type: 'limit',
+        side: 'buy',
         quantity: 10,
         price: 100,
         timestamp: Date.now(),
-        status: "pending",
+        status: 'pending',
       };
 
       await manager.enqueueOrder(order);
@@ -421,7 +426,7 @@ describe("WorkerManager", () => {
       expect(manager.getQueueSize()).toBe(1);
     });
 
-    it("should acquire worker manager through Effect", async () => {
+    it('should acquire worker manager through Effect', async () => {
       const result = await Effect.runPromise(
         Effect.gen(function* ($) {
           const manager = yield* $(Effect.succeed(createWorkerManager({ workerPoolSize: 1 })));
@@ -433,8 +438,8 @@ describe("WorkerManager", () => {
     });
   });
 
-  describe("Queue Processing with Active Workers", () => {
-    it("should start workers and increase active count", async () => {
+  describe('Queue Processing with Active Workers', () => {
+    it('should start workers and increase active count', async () => {
       const manager = createWorkerManager({ workerPoolSize: 2 });
       const orderBook = new OrderBook();
       const processor = createOrderProcessor(orderBook);
@@ -448,7 +453,7 @@ describe("WorkerManager", () => {
       await manager.gracefulShutdown();
     });
 
-    it("should accept orders when workers are active", async () => {
+    it('should accept orders when workers are active', async () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
       const orderBook = new OrderBook();
       const processor = createOrderProcessor(orderBook);
@@ -458,15 +463,15 @@ describe("WorkerManager", () => {
       await manager.start(scope);
 
       const order: Order = {
-        id: "order-1",
-        playerId: "player-1",
-        itemId: "item-1",
-        type: "limit",
-        side: "buy",
+        id: 'order-1',
+        playerId: 'player-1',
+        itemId: 'item-1',
+        type: 'limit',
+        side: 'buy',
         quantity: 10,
         price: 100,
         timestamp: Date.now(),
-        status: "pending",
+        status: 'pending',
       };
 
       await manager.enqueueOrder(order);
@@ -477,17 +482,17 @@ describe("WorkerManager", () => {
     });
   });
 
-  describe("Market Tick Processing", () => {
-    it("should enqueue market ticks when workers are active", async () => {
+  describe('Market Tick Processing', () => {
+    it('should enqueue market ticks when workers are active', async () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
-      const engine = new MarketEngine("item-1", 100);
+      const engine = new MarketEngine('item-1', 100);
       const provider = createPriceProvider(engine);
       manager.setPriceProvider(provider);
 
       const scope = Effect.runSync(Scope.make());
       await manager.start(scope);
 
-      await manager.enqueueMarketTick("item-1");
+      await manager.enqueueMarketTick('item-1');
 
       expect(manager.getQueueSize()).toBeGreaterThan(0);
 
@@ -495,10 +500,10 @@ describe("WorkerManager", () => {
     });
   });
 
-  describe("Market Updates Broadcasting", () => {
-    it("should start game tick loop when workers are active", async () => {
+  describe('Market Updates Broadcasting', () => {
+    it('should start game tick loop when workers are active', async () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
-      const engine = new MarketEngine("item-1", 100);
+      const engine = new MarketEngine('item-1', 100);
       const provider = createPriceProvider(engine);
       manager.setPriceProvider(provider);
 
@@ -510,7 +515,7 @@ describe("WorkerManager", () => {
       await manager.gracefulShutdown();
     });
 
-    it("should start workers without price provider", async () => {
+    it('should start workers without price provider', async () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
 
       const scope = Effect.runSync(Scope.make());
@@ -522,33 +527,33 @@ describe("WorkerManager", () => {
     });
   });
 
-  describe("Market Subscription", () => {
-    it("should receive market updates through subscription", async () => {
+  describe('Market Subscription', () => {
+    it('should receive market updates through subscription', async () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
-      const engine = new MarketEngine("item-1", 100);
+      const engine = new MarketEngine('item-1', 100);
       const provider = createPriceProvider(engine);
       manager.setPriceProvider(provider);
 
       const scope = Effect.runSync(Scope.make());
       await manager.start(scope);
 
-      const updateEffect = await manager.subscribeToMarket("item-1");
+      const updateEffect = await manager.subscribeToMarket('item-1');
 
       expect(updateEffect).toBeDefined();
 
       await manager.gracefulShutdown();
     });
 
-    it("should filter updates by item ID", async () => {
+    it('should filter updates by item ID', async () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
-      const engine = new MarketEngine("item-1", 100);
+      const engine = new MarketEngine('item-1', 100);
       const provider = createPriceProvider(engine);
       manager.setPriceProvider(provider);
 
       const scope = Effect.runSync(Scope.make());
       await manager.start(scope);
 
-      const updateEffect = await manager.subscribeToMarket("item-2");
+      const updateEffect = await manager.subscribeToMarket('item-2');
 
       expect(updateEffect).toBeDefined();
 
@@ -556,15 +561,15 @@ describe("WorkerManager", () => {
     });
   });
 
-  describe("Error Recovery", () => {
-    it("should handle processor errors with retry", async () => {
+  describe('Error Recovery', () => {
+    it('should handle processor errors with retry', async () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
 
       let callCount = 0;
       const failingProcessor: typeof processor = async (order: Order) => {
         callCount++;
         if (callCount < 2) {
-          throw new Error("Simulated processor failure");
+          throw new Error('Simulated processor failure');
         }
         return [];
       };
@@ -575,15 +580,15 @@ describe("WorkerManager", () => {
       await manager.start(scope);
 
       const order: Order = {
-        id: "order-1",
-        playerId: "player-1",
-        itemId: "item-1",
-        type: "limit",
-        side: "buy",
+        id: 'order-1',
+        playerId: 'player-1',
+        itemId: 'item-1',
+        type: 'limit',
+        side: 'buy',
         quantity: 10,
         price: 100,
         timestamp: Date.now(),
-        status: "pending",
+        status: 'pending',
       };
 
       await manager.enqueueOrder(order);
@@ -594,13 +599,13 @@ describe("WorkerManager", () => {
     });
   });
 
-  describe("Acquire Worker Manager", () => {
-    it("should acquire worker manager with scope", async () => {
+  describe('Acquire Worker Manager', () => {
+    it('should acquire worker manager with scope', async () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
       expect(manager).toBeInstanceOf(WorkerManager);
     });
 
-    it("should start workers on acquisition", async () => {
+    it('should start workers on acquisition', async () => {
       const manager = createWorkerManager({ workerPoolSize: 2 });
       const scope = Effect.runSync(Scope.make());
       await manager.start(scope);
@@ -611,8 +616,8 @@ describe("WorkerManager", () => {
     });
   });
 
-  describe("Uptime Tracking", () => {
-    it("should track uptime when workers are active", async () => {
+  describe('Uptime Tracking', () => {
+    it('should track uptime when workers are active', async () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
       const orderBook = new OrderBook();
       const processor = createOrderProcessor(orderBook);
@@ -622,15 +627,15 @@ describe("WorkerManager", () => {
       await manager.start(scope);
 
       const order: Order = {
-        id: "order-1",
-        playerId: "player-1",
-        itemId: "item-1",
-        type: "limit",
-        side: "buy",
+        id: 'order-1',
+        playerId: 'player-1',
+        itemId: 'item-1',
+        type: 'limit',
+        side: 'buy',
         quantity: 10,
         price: 100,
         timestamp: Date.now(),
-        status: "pending",
+        status: 'pending',
       };
 
       await manager.enqueueOrder(order);

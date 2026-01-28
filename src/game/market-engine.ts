@@ -7,7 +7,7 @@
  * - Order flow pressure for buy/sell imbalance
  */
 
-import type { Market, OrderSide } from "./types";
+import type { Market, OrderSide } from './types';
 
 /**
  * Configuration for market engine parameters
@@ -149,7 +149,7 @@ export class MarketEngine {
     const now = Date.now();
     this.orderTimestamps.push(now);
 
-    if (side === "buy") {
+    if (side === 'buy') {
       this.buyVolume += volume;
     } else {
       this.sellVolume += volume;

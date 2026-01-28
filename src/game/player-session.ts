@@ -7,7 +7,7 @@
  * - PlayerSession instances are per-worker, not shared across workers
  */
 
-import { Ref, Effect } from "effect";
+import { Ref, Effect } from 'effect';
 
 /**
  * Player session state for managing balance and inventory
@@ -31,7 +31,10 @@ export class PlayerSession {
    * @param playerId - Unique player identifier
    * @param initialBalance - Starting balance (default: 0)
    */
-  constructor(private readonly playerId: string, initialBalance: number = 0) {
+  constructor(
+    private readonly playerId: string,
+    initialBalance: number = 0
+  ) {
     this.state = Ref.unsafeMake<PlayerSessionState>({
       balance: initialBalance,
       inventory: new Map<string, number>(),
@@ -188,9 +191,6 @@ export class PlayerSession {
 /**
  * Factory function to create a player session
  */
-export function createPlayerSession(
-  playerId: string,
-  initialBalance: number = 0
-): PlayerSession {
+export function createPlayerSession(playerId: string, initialBalance: number = 0): PlayerSession {
   return new PlayerSession(playerId, initialBalance);
 }

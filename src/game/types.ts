@@ -2,9 +2,9 @@
  * Core types for the stock simulator game
  */
 
-export type OrderSide = "buy" | "sell";
-export type OrderType = "limit" | "market";
-export type OrderStatus = "pending" | "filled" | "cancelled" | "partial";
+export type OrderSide = 'buy' | 'sell';
+export type OrderType = 'limit' | 'market';
+export type OrderStatus = 'pending' | 'filled' | 'cancelled' | 'partial';
 
 export interface Order {
   id: string;

@@ -13,19 +13,19 @@
  * for WebSocket distribution to players (not implemented in this task).
  */
 
-import { Queue, PubSub, Ref, Effect, Schedule, Fiber, Scope } from "effect";
-import type { Order, Trade, MarketUpdate } from "./types";
-import { OrderBook } from "./order-book";
-import { MarketEngine } from "./market-engine";
+import { Queue, PubSub, Ref, Effect, Schedule, Fiber, Scope } from 'effect';
+import type { Order, Trade, MarketUpdate } from './types';
+import { OrderBook } from './order-book';
+import { MarketEngine } from './market-engine';
 
 export interface OrderTask {
-  type: "process-order";
+  type: 'process-order';
   order: Order;
   timestamp: number;
 }
 
 export interface MarketTickTask {
-  type: "market-tick";
+  type: 'market-tick';
   itemId: string;
   timestamp: number;
 }
@@ -44,7 +44,7 @@ export interface WorkerStats {
 
 export interface TaskResult {
   taskId: string;
-  status: "success" | "failed";
+  status: 'success' | 'failed';
   error?: string;
   duration: number;
 }
@@ -66,7 +66,9 @@ const DEFAULT_CONFIG: WorkerManagerConfig = {
 };
 
 export type OrderProcessor = (order: Order) => Promise<Trade[]>;
-export type PriceProvider = (itemId: string) => Promise<{ price: number; bestBid: number; bestAsk: number }>;
+export type PriceProvider = (
+  itemId: string
+) => Promise<{ price: number; bestBid: number; bestAsk: number }>;
 
 export class WorkerManager {
   private readonly config: WorkerManagerConfig;
@@ -107,7 +109,7 @@ export class WorkerManager {
 
   async start(scope: Scope.Scope): Promise<void> {
     if (this.isRunning) {
-      console.warn("WorkerManager is already running");
+      console.warn('WorkerManager is already running');
       return;
     }
 
@@ -152,7 +154,7 @@ export class WorkerManager {
       return;
     }
 
-    console.log("Initiating graceful shutdown of WorkerManager...");
+    console.log('Initiating graceful shutdown of WorkerManager...');
     this.isRunning = false;
 
     for (const fiber of this.workerFibers) {
@@ -168,12 +170,12 @@ export class WorkerManager {
       }))
     );
 
-    console.log("WorkerManager shutdown complete");
+    console.log('WorkerManager shutdown complete');
   }
 
   async enqueueOrder(order: Order): Promise<void> {
     const task: OrderTask = {
-      type: "process-order",
+      type: 'process-order',
       order,
       timestamp: Date.now(),
     };
@@ -183,7 +185,7 @@ export class WorkerManager {
 
   async enqueueMarketTick(itemId: string): Promise<void> {
     const task: MarketTickTask = {
-      type: "market-tick",
+      type: 'market-tick',
       itemId,
       timestamp: Date.now(),
     };
@@ -204,7 +206,7 @@ export class WorkerManager {
 
         const startTime = Date.now();
 
-        if (task.type === "process-order") {
+        if (task.type === 'process-order') {
           yield* $(
             self.processOrder(task).pipe(
               Effect.catchAll((error) =>
@@ -216,7 +218,7 @@ export class WorkerManager {
               Effect.timeout(self.config.retryDelay * self.config.maxRetries)
             )
           );
-        } else if (task.type === "market-tick") {
+        } else if (task.type === 'market-tick') {
           yield* $(self.processMarketTick(task));
         }
 
@@ -239,15 +241,15 @@ export class WorkerManager {
       const priceProvider = self.priceProvider;
 
       if (!priceProvider) {
-        yield* $(Effect.log("PriceProvider not set, skipping market updates"));
+        yield* $(Effect.log('PriceProvider not set, skipping market updates'));
         return;
       }
 
       try {
-        const priceData = yield* $(Effect.tryPromise(() => priceProvider("item-1")));
+        const priceData = yield* $(Effect.tryPromise(() => priceProvider('item-1')));
 
         const update: MarketUpdate = {
-          itemId: "item-1",
+          itemId: 'item-1',
           currentPrice: priceData.price,
           bestBid: priceData.bestBid,
           bestAsk: priceData.bestAsk,
@@ -267,9 +269,7 @@ export class WorkerManager {
           })
         );
       } catch (error) {
-        yield* $(
-          Effect.logError("Failed to broadcast market update", { error })
-        );
+        yield* $(Effect.logError('Failed to broadcast market update', { error }));
       }
     });
   }
@@ -327,9 +327,7 @@ export class WorkerManager {
       const processor = self.orderProcessor;
 
       if (!processor) {
-        yield* $(
-          Effect.logWarning("OrderProcessor not set, skipping order processing")
-        );
+        yield* $(Effect.logWarning('OrderProcessor not set, skipping order processing'));
         return [];
       }
 
@@ -347,9 +345,7 @@ export class WorkerManager {
         })
       );
 
-      yield* $(
-        Effect.log(`Order ${task.order.id} processed, ${trades.length} trades generated`)
-      );
+      yield* $(Effect.log(`Order ${task.order.id} processed, ${trades.length} trades generated`));
 
       return trades;
     });
@@ -362,9 +358,7 @@ export class WorkerManager {
       const provider = self.priceProvider;
 
       if (!provider) {
-        yield* $(
-          Effect.logWarning("PriceProvider not set, skipping market tick")
-        );
+        yield* $(Effect.logWarning('PriceProvider not set, skipping market tick'));
         return;
       }
 
@@ -391,9 +385,7 @@ export class WorkerManager {
         })
       );
 
-      yield* $(
-        Effect.log(`Market tick processed for ${task.itemId}: ${priceData.price}`)
-      );
+      yield* $(Effect.log(`Market tick processed for ${task.itemId}: ${priceData.price}`));
     });
   }
 
@@ -401,7 +393,7 @@ export class WorkerManager {
     const self = this;
 
     return Effect.gen(function* ($) {
-      yield* $(Effect.log("Game tick loop started"));
+      yield* $(Effect.log('Game tick loop started'));
 
       yield* $(
         Effect.sync(() => {
@@ -415,11 +407,7 @@ export class WorkerManager {
       );
 
       yield* $(self.broadcastMarketUpdates());
-    }).pipe(
-      Effect.repeat(
-        Schedule.spaced(`${self.config.tickInterval} millis`)
-      )
-    );
+    }).pipe(Effect.repeat(Schedule.spaced(`${self.config.tickInterval} millis`)));
   }
 }
 
@@ -453,7 +441,10 @@ export function acquireWorkerManager(
     yield* $(Effect.tryPromise(() => manager.start(scope)));
 
     yield* $(
-      Scope.addFinalizer(scope, Effect.sync(() => manager.gracefulShutdown()))
+      Scope.addFinalizer(
+        scope,
+        Effect.sync(() => manager.gracefulShutdown())
+      )
     );
 
     return manager;

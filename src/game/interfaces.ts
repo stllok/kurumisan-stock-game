@@ -1,6 +1,6 @@
-import type { Effect } from "effect";
+import type { Effect } from 'effect';
 
-import type { Market, Order, OrderResult, Player } from "./types";
+import type { Market, Order, OrderResult, Player } from './types';
 
 export interface MarketUpdate {
   itemId: string;
@@ -11,15 +11,15 @@ export interface MarketUpdate {
 }
 
 export interface OrderSubmissionInterface {
-  submitOrder(order: Order): Effect<unknown, unknown, OrderResult>;
+  submitOrder(order: Order): Effect.Effect<unknown, unknown, OrderResult>;
 }
 
 export interface MarketDataInterface {
-  subscribeToMarket(itemId: string): Effect<unknown, unknown, Stream<MarketUpdate>>;
+  subscribeToMarket(itemId: string): Effect.Effect<unknown, unknown, Stream<MarketUpdate>>;
 }
 
 export interface PlayerStateInterface {
-  getPlayerState(playerId: string): Effect<unknown, unknown, Player>;
+  getPlayerState(playerId: string): Effect.Effect<unknown, unknown, Player>;
 }
 
 export interface Stream<A> {

@@ -1,22 +1,22 @@
-import { describe, it, expect, beforeEach } from "bun:test";
-import { MarketEngine } from "../market-engine";
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { MarketEngine } from '../market-engine';
 
-describe("MarketEngine", () => {
+describe('MarketEngine', () => {
   let engine: MarketEngine;
 
   beforeEach(() => {
-    engine = new MarketEngine("TEST_ITEM", 100.0);
+    engine = new MarketEngine('TEST_ITEM', 100.0);
   });
 
-  describe("initialization", () => {
-    it("should initialize with default parameters", () => {
+  describe('initialization', () => {
+    it('should initialize with default parameters', () => {
       expect(engine.getCurrentPrice()).toBe(100.0);
       expect(engine.getVolatility()).toBe(0.2);
       expect(engine.getDrift()).toBe(0.08);
     });
 
-    it("should accept custom configuration", () => {
-      const customEngine = new MarketEngine("CUSTOM_ITEM", 50.0, {
+    it('should accept custom configuration', () => {
+      const customEngine = new MarketEngine('CUSTOM_ITEM', 50.0, {
         drift: 0.1,
         volatility: 0.3,
         dt: 1 / 365,
@@ -28,8 +28,8 @@ describe("MarketEngine", () => {
     });
   });
 
-  describe("Box-Muller transform", () => {
-    it("should avoid log(0) errors", () => {
+  describe('Box-Muller transform', () => {
+    it('should avoid log(0) errors', () => {
       expect(() => {
         for (let i = 0; i < 10000; i++) {
           engine.updatePrice();
@@ -38,8 +38,8 @@ describe("MarketEngine", () => {
     });
   });
 
-  describe("GBM price simulation", () => {
-    it("should update price using GBM formula", () => {
+  describe('GBM price simulation', () => {
+    it('should update price using GBM formula', () => {
       const initialPrice = engine.getCurrentPrice();
       engine.updatePrice();
       const newPrice = engine.getCurrentPrice();
@@ -48,7 +48,7 @@ describe("MarketEngine", () => {
       expect(newPrice).toBeGreaterThan(0);
     });
 
-    it("should handle multiple price updates", () => {
+    it('should handle multiple price updates', () => {
       const prices: number[] = [engine.getCurrentPrice()];
 
       for (let i = 0; i < 100; i++) {
@@ -63,12 +63,12 @@ describe("MarketEngine", () => {
       expect(uniquePrices.size).toBeGreaterThan(1);
     });
 
-    it("should produce price variance with volatility", () => {
-      const highVolEngine = new MarketEngine("HIGH_VOL", 100.0, {
+    it('should produce price variance with volatility', () => {
+      const highVolEngine = new MarketEngine('HIGH_VOL', 100.0, {
         volatility: 0.5,
       });
 
-      const lowVolEngine = new MarketEngine("LOW_VOL", 100.0, {
+      const lowVolEngine = new MarketEngine('LOW_VOL', 100.0, {
         volatility: 0.05,
       });
 
@@ -88,8 +88,8 @@ describe("MarketEngine", () => {
       expect(highVolVariance).toBeGreaterThan(lowVolVariance);
     });
 
-    it("should respect drift parameter", () => {
-      const positiveDriftEngine = new MarketEngine("POS_DRIFT", 100.0, {
+    it('should respect drift parameter', () => {
+      const positiveDriftEngine = new MarketEngine('POS_DRIFT', 100.0, {
         drift: 0.5,
         volatility: 0.1,
         dt: 0.01,
@@ -106,8 +106,8 @@ describe("MarketEngine", () => {
       expect(finalPrice).toBeGreaterThan(initialPrice);
     });
 
-    it("should never produce negative prices", () => {
-      engine = new MarketEngine("LOW_PRICE", 0.01, {
+    it('should never produce negative prices', () => {
+      engine = new MarketEngine('LOW_PRICE', 0.01, {
         drift: -0.5,
         volatility: 0.5,
       });
@@ -119,8 +119,8 @@ describe("MarketEngine", () => {
     });
   });
 
-  describe("volatility", () => {
-    it("should set and get volatility", () => {
+  describe('volatility', () => {
+    it('should set and get volatility', () => {
       engine.setVolatility(0.5);
       expect(engine.getVolatility()).toBe(0.5);
 
@@ -128,12 +128,12 @@ describe("MarketEngine", () => {
       expect(engine.getVolatility()).toBe(0.1);
     });
 
-    it("should reject negative volatility", () => {
+    it('should reject negative volatility', () => {
       engine.setVolatility(-0.1);
       expect(engine.getVolatility()).toBeGreaterThanOrEqual(0);
     });
 
-    it("should handle zero volatility", () => {
+    it('should handle zero volatility', () => {
       engine.setVolatility(0);
       const initialPrice = engine.getCurrentPrice();
 
@@ -145,8 +145,8 @@ describe("MarketEngine", () => {
     });
   });
 
-  describe("drift", () => {
-    it("should set and get drift", () => {
+  describe('drift', () => {
+    it('should set and get drift', () => {
       engine.setDrift(0.15);
       expect(engine.getDrift()).toBe(0.15);
 
@@ -154,7 +154,7 @@ describe("MarketEngine", () => {
       expect(engine.getDrift()).toBe(-0.05);
     });
 
-    it("should accept any drift value", () => {
+    it('should accept any drift value', () => {
       engine.setDrift(0);
       expect(engine.getDrift()).toBe(0);
 
@@ -163,10 +163,10 @@ describe("MarketEngine", () => {
     });
   });
 
-  describe("order flow pressure", () => {
-    it("should record buy orders", () => {
-      engine.recordOrder("buy", 100);
-      engine.recordOrder("buy", 50);
+  describe('order flow pressure', () => {
+    it('should record buy orders', () => {
+      engine.recordOrder('buy', 100);
+      engine.recordOrder('buy', 50);
 
       engine.updatePrice();
       const priceAfterBuys = engine.getCurrentPrice();
@@ -174,9 +174,9 @@ describe("MarketEngine", () => {
       expect(priceAfterBuys).toBeGreaterThan(0);
     });
 
-    it("should record sell orders", () => {
-      engine.recordOrder("sell", 100);
-      engine.recordOrder("sell", 50);
+    it('should record sell orders', () => {
+      engine.recordOrder('sell', 100);
+      engine.recordOrder('sell', 50);
 
       engine.updatePrice();
       const priceAfterSells = engine.getCurrentPrice();
@@ -184,12 +184,12 @@ describe("MarketEngine", () => {
       expect(priceAfterSells).toBeGreaterThan(0);
     });
 
-    it("should reflect buy pressure in price", () => {
-      const controlEngine = new MarketEngine("CONTROL", 100.0);
-      const buyPressureEngine = new MarketEngine("BUY_PRESSURE", 100.0);
+    it('should reflect buy pressure in price', () => {
+      const controlEngine = new MarketEngine('CONTROL', 100.0);
+      const buyPressureEngine = new MarketEngine('BUY_PRESSURE', 100.0);
 
       for (let i = 0; i < 50; i++) {
-        buyPressureEngine.recordOrder("buy", 10);
+        buyPressureEngine.recordOrder('buy', 10);
       }
 
       buyPressureEngine.updatePrice();
@@ -199,12 +199,12 @@ describe("MarketEngine", () => {
       expect(controlEngine.getCurrentPrice()).toBeGreaterThan(0);
     });
 
-    it("should reflect sell pressure in price", () => {
-      const controlEngine = new MarketEngine("CONTROL", 100.0);
-      const sellPressureEngine = new MarketEngine("SELL_PRESSURE", 100.0);
+    it('should reflect sell pressure in price', () => {
+      const controlEngine = new MarketEngine('CONTROL', 100.0);
+      const sellPressureEngine = new MarketEngine('SELL_PRESSURE', 100.0);
 
       for (let i = 0; i < 50; i++) {
-        sellPressureEngine.recordOrder("sell", 10);
+        sellPressureEngine.recordOrder('sell', 10);
       }
 
       sellPressureEngine.updatePrice();
@@ -214,12 +214,12 @@ describe("MarketEngine", () => {
       expect(controlEngine.getCurrentPrice()).toBeGreaterThan(0);
     });
 
-    it("should handle balanced order flow", () => {
-      const balancedEngine = new MarketEngine("BALANCED", 100.0);
+    it('should handle balanced order flow', () => {
+      const balancedEngine = new MarketEngine('BALANCED', 100.0);
 
       for (let i = 0; i < 20; i++) {
-        balancedEngine.recordOrder("buy", 10);
-        balancedEngine.recordOrder("sell", 10);
+        balancedEngine.recordOrder('buy', 10);
+        balancedEngine.recordOrder('sell', 10);
       }
 
       balancedEngine.updatePrice();
@@ -227,7 +227,7 @@ describe("MarketEngine", () => {
       expect(balancedEngine.getCurrentPrice()).toBeGreaterThan(0);
     });
 
-    it("should have no pressure when no orders recorded", () => {
+    it('should have no pressure when no orders recorded', () => {
       const initialPrice = engine.getCurrentPrice();
       engine.updatePrice();
       const newPrice = engine.getCurrentPrice();
@@ -236,18 +236,18 @@ describe("MarketEngine", () => {
     });
   });
 
-  describe("market state", () => {
-    it("should return current market state", () => {
+  describe('market state', () => {
+    it('should return current market state', () => {
       const market = engine.getMarketState();
 
-      expect(market.itemId).toBe("TEST_ITEM");
+      expect(market.itemId).toBe('TEST_ITEM');
       expect(market.currentPrice).toBe(100.0);
       expect(market.volatility).toBe(0.2);
       expect(market.orderBook.bids).toEqual([]);
       expect(market.orderBook.asks).toEqual([]);
     });
 
-    it("should update market state after price changes", () => {
+    it('should update market state after price changes', () => {
       engine.updatePrice();
       const market = engine.getMarketState();
 
@@ -256,9 +256,9 @@ describe("MarketEngine", () => {
     });
   });
 
-  describe("parameter configuration", () => {
-    it("should set time step", () => {
-      const engineWithDt = new MarketEngine("TEST_DT", 100.0, { dt: 1 / 365 });
+  describe('parameter configuration', () => {
+    it('should set time step', () => {
+      const engineWithDt = new MarketEngine('TEST_DT', 100.0, { dt: 1 / 365 });
       const initialPrice = engineWithDt.getCurrentPrice();
 
       engineWithDt.updatePrice();
@@ -266,17 +266,17 @@ describe("MarketEngine", () => {
       expect(engineWithDt.getCurrentPrice()).not.toBe(initialPrice);
     });
 
-    it("should set pressure factor", () => {
-      const engineWithPressure = new MarketEngine("TEST_PRESSURE", 100.0);
+    it('should set pressure factor', () => {
+      const engineWithPressure = new MarketEngine('TEST_PRESSURE', 100.0);
 
       engineWithPressure.setPressureFactor(2.0);
-      engineWithPressure.recordOrder("buy", 100);
+      engineWithPressure.recordOrder('buy', 100);
       engineWithPressure.updatePrice();
 
       expect(engineWithPressure.getCurrentPrice()).toBeGreaterThan(0);
     });
 
-    it("should reject negative pressure factor", () => {
+    it('should reject negative pressure factor', () => {
       engine.setPressureFactor(-1.0);
       expect(() => {
         engine.updatePrice();
