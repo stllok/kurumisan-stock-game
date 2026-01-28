@@ -228,7 +228,7 @@ describe('MarketEngine', () => {
     });
 
     it('should have no pressure when no orders recorded', () => {
-      const initialPrice = engine.getCurrentPrice();
+      const _initialPrice = engine.getCurrentPrice();
       engine.updatePrice();
       const newPrice = engine.getCurrentPrice();
 

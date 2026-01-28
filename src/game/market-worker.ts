@@ -19,9 +19,6 @@
  */
 
 import type { Order, Trade } from './types';
-import { OrderBook } from './order-book';
-import { MarketEngine } from './market-engine';
-import { PlayerSession } from './player-session';
 
 /**
  * Worker message types for main thread → worker communication
@@ -197,7 +194,9 @@ export class MarketWorker {
       this.pendingResponses.set(messageId, wrappedResolve);
 
       // Send message with correlation ID
-      this.worker!.postMessage({ ...message, _messageId: messageId });
+      if (this.worker) {
+        this.worker.postMessage({ ...message, _messageId: messageId });
+      }
     });
   }
 
@@ -217,9 +216,11 @@ export class MarketWorker {
       const messageId = response._messageId;
 
       if (messageId !== undefined && this.pendingResponses.has(messageId)) {
-        const callback = this.pendingResponses.get(messageId)!;
-        this.pendingResponses.delete(messageId);
-        callback(response);
+        const callback = this.pendingResponses.get(messageId);
+        if (callback) {
+          this.pendingResponses.delete(messageId);
+          callback(response);
+        }
       }
     };
 

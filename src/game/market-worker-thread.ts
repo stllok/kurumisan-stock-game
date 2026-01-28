@@ -76,7 +76,7 @@ class SimpleOrderBook {
       } else if (bestAsk.type === 'market') {
         tradePrice = bidPrice ?? 0;
       } else {
-        tradePrice = askPrice!;
+        tradePrice = askPrice ?? 0;
       }
 
       const tradeQuantity = Math.min(bestBid.quantity, bestAsk.quantity);
@@ -131,11 +131,11 @@ class SimpleMarketEngine {
     const dt = this.dt;
 
     // Box-Muller transform for normal distribution
-    let u1, u2;
+    let u1;
     do {
       u1 = Math.random();
     } while (u1 <= 0.00001);
-    u2 = Math.random();
+    const u2 = Math.random();
     const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 
     const driftTerm = (mu - (sigma * sigma) / 2) * dt;

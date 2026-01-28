@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { MarketWorker, WorkerPool, WorkerMessage, WorkerResponse } from '../market-worker';
+import { MarketWorker, WorkerPool } from '../market-worker';
 import type { Order } from '../types';
 
 describe('MarketWorker', () => {

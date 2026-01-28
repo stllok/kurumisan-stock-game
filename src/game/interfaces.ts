@@ -1,6 +1,6 @@
 import type { Effect } from 'effect';
 
-import type { Market, Order, OrderResult, Player } from './types';
+import type { Order, OrderResult, Player } from './types';
 
 export interface MarketUpdate {
   itemId: string;

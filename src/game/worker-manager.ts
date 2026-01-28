@@ -118,6 +118,7 @@ export class WorkerManager {
 
     for (let i = 0; i < this.config.workerPoolSize; i++) {
       const workerId = i;
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
 
       await Effect.runPromise(
@@ -134,7 +135,7 @@ export class WorkerManager {
         )
       );
     }
-
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     await Effect.runPromise(
@@ -198,6 +199,7 @@ export class WorkerManager {
   }
 
   processOrderQueue(workerId: number): Effect.Effect<void, never, never> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     return Effect.gen(function* ($) {
@@ -222,7 +224,7 @@ export class WorkerManager {
           yield* $(self.processMarketTick(task));
         }
 
-        const duration = Date.now() - startTime;
+        // const duration = Date.now() - startTime;  // TODO: Add performance metrics
 
         Effect.runSync(
           Ref.update(self.stats, (s) => ({
@@ -235,6 +237,7 @@ export class WorkerManager {
   }
 
   broadcastMarketUpdates(): Effect.Effect<void, never, never> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     return Effect.gen(function* ($) {
@@ -290,6 +293,7 @@ export class WorkerManager {
   async restartWorker(workerId: number): Promise<void> {
     console.log(`Restarting worker ${workerId}...`);
 
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     Effect.runSync(
@@ -321,6 +325,7 @@ export class WorkerManager {
   }
 
   private processOrder(task: OrderTask): Effect.Effect<Trade[], never, never> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     return Effect.gen(function* ($) {
@@ -352,6 +357,7 @@ export class WorkerManager {
   }
 
   private processMarketTick(task: MarketTickTask): Effect.Effect<void, never, never> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     return Effect.gen(function* ($) {
@@ -390,6 +396,7 @@ export class WorkerManager {
   }
 
   private gameTickLoop(): Effect.Effect<void, never, never> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     return Effect.gen(function* ($) {
@@ -411,14 +418,16 @@ export class WorkerManager {
   }
 }
 
-export function createOrderProcessor(orderBook: OrderBook): OrderProcessor {
-  return async (order: Order) => {
+export function createOrderProcessor(_orderBook: OrderBook): OrderProcessor {
+  return async (_order: Order) => {
+    // TODO: Implement order processing using orderBook
     return [];
   };
 }
 
 export function createPriceProvider(marketEngine: MarketEngine): PriceProvider {
-  return async (itemId: string) => {
+  return async (_itemId: string) => {
+    // TODO: Support multiple markets by itemId
     const price = marketEngine.getCurrentPrice();
     const bestBid = price * 0.99;
     const bestAsk = price * 1.01;

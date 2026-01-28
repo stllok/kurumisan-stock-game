@@ -64,13 +64,12 @@ export class MarketEngine {
    */
   private boxMullerTransform(): number {
     let u1: number;
-    let u2: number;
 
     do {
       u1 = Math.random();
     } while (u1 <= 0.00001);
 
-    u2 = Math.random();
+    const u2 = Math.random();
 
     const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 

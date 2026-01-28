@@ -15,8 +15,8 @@ import { describe, it, expect, afterEach } from 'bun:test';
 import { WorkerPool, createWorkerPool } from '../market-worker';
 import { OrderBook } from '../order-book';
 import { MarketEngine } from '../market-engine';
-import { PlayerSession, createPlayerSession } from '../player-session';
-import type { Order, OrderSide, OrderType, OrderStatus } from '../types';
+import { createPlayerSession } from '../player-session';
+import type { Order } from '../types';
 
 describe('Integration Tests', () => {
   let pool: WorkerPool;
@@ -221,7 +221,7 @@ describe('Integration Tests', () => {
       const results = await pool.tickAll();
       expect(results.size).toBe(markets.length);
 
-      for (const [itemId, response] of results) {
+      for (const [_itemId, response] of results) {
         expect(response.type).toBe('tick-completed');
         if (response.type === 'tick-completed') {
           expect(response.trades.length).toBeGreaterThan(0);
@@ -389,7 +389,7 @@ describe('Integration Tests', () => {
         dt: 0.01,
       });
 
-      const initialPrice = positiveDriftEngine.getCurrentPrice();
+      const _initialPrice = positiveDriftEngine.getCurrentPrice();
 
       for (let i = 0; i < 1000; i++) {
         positiveDriftEngine.updatePrice();
@@ -397,7 +397,7 @@ describe('Integration Tests', () => {
 
       const finalPrice = positiveDriftEngine.getCurrentPrice();
 
-      expect(finalPrice).toBeGreaterThan(initialPrice * 0.8);
+      expect(finalPrice).toBeGreaterThan(_initialPrice * 0.8);
     });
 
     it('should handle zero volatility (deterministic pricing)', async () => {
@@ -407,7 +407,7 @@ describe('Integration Tests', () => {
         dt: 0.01,
       });
 
-      const initialPrice = zeroVolEngine.getCurrentPrice();
+      const _initialPrice = zeroVolEngine.getCurrentPrice();
 
       for (let i = 0; i < 10; i++) {
         zeroVolEngine.updatePrice();
@@ -415,7 +415,7 @@ describe('Integration Tests', () => {
 
       const finalPrice = zeroVolEngine.getCurrentPrice();
 
-      expect(Math.abs(finalPrice - initialPrice)).toBeLessThan(20.0);
+      expect(Math.abs(finalPrice - _initialPrice)).toBeLessThan(20.0);
     });
   });
 
@@ -456,7 +456,7 @@ describe('Integration Tests', () => {
         balancedEngine.recordOrder('sell', 10);
       }
 
-      const initialPrice = balancedEngine.getCurrentPrice();
+      const _initialPrice = balancedEngine.getCurrentPrice();
       balancedEngine.updatePrice();
       const priceAfterBalanced = balancedEngine.getCurrentPrice();
 

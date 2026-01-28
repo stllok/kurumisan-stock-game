@@ -8,7 +8,7 @@
  * - Partial fills supported
  */
 
-import type { Order, OrderSide, Trade } from './types';
+import type { Order, Trade } from './types';
 
 /**
  * Priority queue implementation with custom comparator
@@ -229,7 +229,7 @@ export class OrderBook {
         tradePrice = bidPrice ?? 0;
       } else {
         // Both limit: use ask price (earlier timestamp)
-        tradePrice = askPrice!;
+        tradePrice = askPrice ?? 0;
       }
 
       // Determine trade quantity

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { Effect, Ref, Scope } from 'effect';
+import { Effect, Scope } from 'effect';
 import {
   WorkerManager,
   createWorkerManager,
