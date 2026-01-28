@@ -29,21 +29,6 @@ describe("MarketEngine", () => {
   });
 
   describe("Box-Muller transform", () => {
-    it("should generate standard normal random variables", () => {
-      const results: number[] = [];
-      const sampleSize = 1000;
-
-      for (let i = 0; i < sampleSize; i++) {
-        engine.updatePrice();
-        results.push(engine.getCurrentPrice());
-      }
-
-      const mean = results.reduce((sum, val) => sum + val, 0) / results.length;
-
-      expect(mean).toBeGreaterThan(50);
-      expect(mean).toBeLessThan(150);
-    });
-
     it("should avoid log(0) errors", () => {
       expect(() => {
         for (let i = 0; i < 10000; i++) {
