@@ -13,7 +13,7 @@ export default [
   js.configs.recommended,
 
   // TypeScript specific configuration
-  ...tseslint.configs.recommended,
+  ...tseslint.configs.stylistic,
 
   // Disable Prettier conflicting rules (must be last)
   eslintConfigPrettier,
