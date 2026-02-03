@@ -53,3 +53,11 @@ export interface OrderResult {
   avgPrice: number;
   trades: Trade[];
 }
+
+export interface MarketUpdate {
+  itemId: string;
+  currentPrice: number;
+  bestBid: number;
+  bestAsk: number;
+  timestamp: number;
+}

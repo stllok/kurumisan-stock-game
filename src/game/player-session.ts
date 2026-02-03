@@ -1,13 +1,10 @@
 /**
- * In-memory player session management with thread-safe state
+ * In-memory player session management
  *
- * IMPORTANT: Effect Ref is single-threaded and cannot be shared between Bun workers
- * - Each worker must have its own Ref instances for its state
+ * PlayerSession instances are per-worker, not shared across workers
+ * - Each worker must have its own PlayerSession instances for its state
  * - Cross-worker communication only via message passing (postMessage/onmessage)
- * - PlayerSession instances are per-worker, not shared across workers
  */
-
-import { Ref, Effect } from 'effect';
 
 /**
  * Player session state for managing balance and inventory
@@ -18,13 +15,13 @@ export interface PlayerSessionState {
 }
 
 /**
- * Player session class with thread-safe state management
+ * Player session class with state management
  *
- * Uses Effect Ref for thread-safe state updates within a single worker
+ * Uses plain object for state updates within a single worker
  * Prevents negative balances and inventory via validation
  */
 export class PlayerSession {
-  private readonly state: Ref.Ref<PlayerSessionState>;
+  private state: PlayerSessionState;
 
   /**
    * Create a new player session
@@ -35,10 +32,10 @@ export class PlayerSession {
     private readonly playerId: string,
     initialBalance: number = 0
   ) {
-    this.state = Ref.unsafeMake<PlayerSessionState>({
+    this.state = {
       balance: initialBalance,
       inventory: new Map<string, number>(),
-    });
+    };
   }
 
   /**
@@ -52,7 +49,7 @@ export class PlayerSession {
    * Get current balance
    */
   getBalance(): number {
-    return Effect.runSync(Ref.get(this.state)).balance;
+    return this.state.balance;
   }
 
   /**
@@ -61,22 +58,15 @@ export class PlayerSession {
    * @throws Error if resulting balance would be negative
    */
   updateBalance(delta: number): void {
-    Effect.runSync(
-      Ref.update(this.state, (state) => {
-        const newBalance = state.balance + delta;
+    const newBalance = this.state.balance + delta;
 
-        if (newBalance < 0) {
-          throw new Error(
-            `Insufficient balance: cannot update from ${state.balance} to ${newBalance} (delta: ${delta})`
-          );
-        }
+    if (newBalance < 0) {
+      throw new Error(
+        `Insufficient balance: cannot update from ${this.state.balance} to ${newBalance} (delta: ${delta})`
+      );
+    }
 
-        return {
-          balance: newBalance,
-          inventory: state.inventory,
-        };
-      })
-    );
+    this.state.balance = newBalance;
   }
 
   /**
@@ -85,7 +75,7 @@ export class PlayerSession {
    * @returns Quantity (0 if item not in inventory)
    */
   getInventory(itemId: string): number {
-    return Effect.runSync(Ref.get(this.state)).inventory.get(itemId) ?? 0;
+    return this.state.inventory.get(itemId) ?? 0;
   }
 
   /**
@@ -95,31 +85,20 @@ export class PlayerSession {
    * @throws Error if resulting quantity would be negative
    */
   updateInventory(itemId: string, delta: number): void {
-    Effect.runSync(
-      Ref.update(this.state, (state) => {
-        const currentQuantity = state.inventory.get(itemId) ?? 0;
-        const newQuantity = currentQuantity + delta;
+    const currentQuantity = this.state.inventory.get(itemId) ?? 0;
+    const newQuantity = currentQuantity + delta;
 
-        if (newQuantity < 0) {
-          throw new Error(
-            `Insufficient inventory: cannot update ${itemId} from ${currentQuantity} to ${newQuantity} (delta: ${delta})`
-          );
-        }
+    if (newQuantity < 0) {
+      throw new Error(
+        `Insufficient inventory: cannot update ${itemId} from ${currentQuantity} to ${newQuantity} (delta: ${delta})`
+      );
+    }
 
-        const newInventory = new Map(state.inventory);
-
-        if (newQuantity === 0) {
-          newInventory.delete(itemId);
-        } else {
-          newInventory.set(itemId, newQuantity);
-        }
-
-        return {
-          balance: state.balance,
-          inventory: newInventory,
-        };
-      })
-    );
+    if (newQuantity === 0) {
+      this.state.inventory.delete(itemId);
+    } else {
+      this.state.inventory.set(itemId, newQuantity);
+    }
   }
 
   /**
@@ -146,8 +125,7 @@ export class PlayerSession {
    * @returns Copy of inventory map (defensive copy)
    */
   getAllInventory(): Map<string, number> {
-    const state = Effect.runSync(Ref.get(this.state));
-    return new Map(state.inventory);
+    return new Map(this.state.inventory);
   }
 
   /**
@@ -155,10 +133,9 @@ export class PlayerSession {
    * @returns Copy of player state (defensive copy)
    */
   getState(): PlayerSessionState {
-    const state = Effect.runSync(Ref.get(this.state));
     return {
-      balance: state.balance,
-      inventory: new Map(state.inventory),
+      balance: this.state.balance,
+      inventory: new Map(this.state.inventory),
     };
   }
 
@@ -167,23 +144,20 @@ export class PlayerSession {
    * @param newState - New state to set
    */
   setState(newState: PlayerSessionState): void {
-    Effect.runSync(
-      Ref.set(this.state, {
-        balance: newState.balance,
-        inventory: new Map(newState.inventory),
-      })
-    );
+    this.state = {
+      balance: newState.balance,
+      inventory: new Map(newState.inventory),
+    };
   }
 
   /**
    * Get player data in Player interface format
    */
   toPlayer(): { id: string; balance: number; inventory: Map<string, number> } {
-    const state = Effect.runSync(Ref.get(this.state));
     return {
       id: this.playerId,
-      balance: state.balance,
-      inventory: new Map(state.inventory),
+      balance: this.state.balance,
+      inventory: new Map(this.state.inventory),
     };
   }
 }

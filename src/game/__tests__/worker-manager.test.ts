@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'bun:test';
-import { Effect, Scope } from 'effect';
 import {
   WorkerManager,
   createWorkerManager,
   createOrderProcessor,
   createPriceProvider,
+  acquireWorkerManager,
+  type OrderProcessor,
 } from '../worker-manager';
 import { OrderBook } from '../order-book';
 import { MarketEngine } from '../market-engine';
@@ -136,17 +137,17 @@ describe('WorkerManager', () => {
     });
   });
 
-  describe('PubSub Broadcasting', () => {
-    it('should create subscription Effect for market updates', async () => {
+  describe('Market Updates Broadcasting', () => {
+    it('should create subscription for market updates', async () => {
       const manager = createWorkerManager();
       const engine = new MarketEngine('item-1', 100);
       const provider = createPriceProvider(engine);
       manager.setPriceProvider(provider);
 
-      const updateEffect = await manager.subscribeToMarket('item-1');
+      const updatePromise = manager.subscribeToMarket('item-1');
 
-      expect(updateEffect).toBeDefined();
-      expect(typeof updateEffect).toBe('object');
+      expect(updatePromise).toBeDefined();
+      expect(updatePromise).toBeInstanceOf(Promise);
     });
 
     it('should enqueue market tick tasks for broadcasting', async () => {
@@ -322,14 +323,13 @@ describe('WorkerManager', () => {
   });
 
   describe('Worker Start and Stop', () => {
-    it('should start worker manager with scope', async () => {
+    it('should start worker manager', async () => {
       const manager = createWorkerManager({ workerPoolSize: 2 });
       const orderBook = new OrderBook();
       const processor = createOrderProcessor(orderBook);
       manager.setOrderProcessor(processor);
 
-      const scope = Effect.runSync(Scope.make());
-      await manager.start(scope);
+      await manager.start();
 
       expect(manager.getStats().workersActive).toBe(2);
 
@@ -342,9 +342,8 @@ describe('WorkerManager', () => {
       const processor = createOrderProcessor(orderBook);
       manager.setOrderProcessor(processor);
 
-      const scope = Effect.runSync(Scope.make());
-      await manager.start(scope);
-      await manager.start(scope);
+      await manager.start();
+      await manager.start();
 
       expect(manager.getStats().workersActive).toBe(1);
 
@@ -357,8 +356,7 @@ describe('WorkerManager', () => {
       const processor = createOrderProcessor(orderBook);
       manager.setOrderProcessor(processor);
 
-      const scope = Effect.runSync(Scope.make());
-      await manager.start(scope);
+      await manager.start();
 
       expect(manager.getStats().workersActive).toBe(2);
 
@@ -382,62 +380,6 @@ describe('WorkerManager', () => {
     });
   });
 
-  describe('Private Methods Coverage', () => {
-    it('should process order with processor set', async () => {
-      const manager = createWorkerManager();
-      const orderBook = new OrderBook();
-      const processor = createOrderProcessor(orderBook);
-      manager.setOrderProcessor(processor);
-
-      const order: Order = {
-        id: 'order-1',
-        playerId: 'player-1',
-        itemId: 'item-1',
-        type: 'limit',
-        side: 'buy',
-        quantity: 10,
-        price: 100,
-        timestamp: Date.now(),
-        status: 'pending',
-      };
-
-      await manager.enqueueOrder(order);
-
-      expect(manager.getQueueSize()).toBe(1);
-    });
-
-    it('should handle order processing without processor', async () => {
-      const manager = createWorkerManager();
-
-      const order: Order = {
-        id: 'order-1',
-        playerId: 'player-1',
-        itemId: 'item-1',
-        type: 'limit',
-        side: 'buy',
-        quantity: 10,
-        price: 100,
-        timestamp: Date.now(),
-        status: 'pending',
-      };
-
-      await manager.enqueueOrder(order);
-
-      expect(manager.getQueueSize()).toBe(1);
-    });
-
-    it('should acquire worker manager through Effect', async () => {
-      const result = await Effect.runPromise(
-        Effect.gen(function* ($) {
-          const manager = yield* $(Effect.succeed(createWorkerManager({ workerPoolSize: 1 })));
-          return manager;
-        })
-      );
-
-      expect(result).toBeInstanceOf(WorkerManager);
-    });
-  });
-
   describe('Queue Processing with Active Workers', () => {
     it('should start workers and increase active count', async () => {
       const manager = createWorkerManager({ workerPoolSize: 2 });
@@ -445,8 +387,7 @@ describe('WorkerManager', () => {
       const processor = createOrderProcessor(orderBook);
       manager.setOrderProcessor(processor);
 
-      const scope = Effect.runSync(Scope.make());
-      await manager.start(scope);
+      await manager.start();
 
       expect(manager.getStats().workersActive).toBe(2);
 
@@ -459,8 +400,7 @@ describe('WorkerManager', () => {
       const processor = createOrderProcessor(orderBook);
       manager.setOrderProcessor(processor);
 
-      const scope = Effect.runSync(Scope.make());
-      await manager.start(scope);
+      await manager.start();
 
       const order: Order = {
         id: 'order-1',
@@ -476,7 +416,10 @@ describe('WorkerManager', () => {
 
       await manager.enqueueOrder(order);
 
-      expect(manager.getQueueSize()).toBeGreaterThan(0);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      const stats = manager.getStats();
+      expect(stats.ordersProcessed).toBe(1);
 
       await manager.gracefulShutdown();
     });
@@ -489,12 +432,14 @@ describe('WorkerManager', () => {
       const provider = createPriceProvider(engine);
       manager.setPriceProvider(provider);
 
-      const scope = Effect.runSync(Scope.make());
-      await manager.start(scope);
+      await manager.start();
 
       await manager.enqueueMarketTick('item-1');
 
-      expect(manager.getQueueSize()).toBeGreaterThan(0);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      const stats = manager.getStats();
+      expect(stats.marketUpdatesBroadcast).toBeGreaterThan(0);
 
       await manager.gracefulShutdown();
     });
@@ -507,8 +452,7 @@ describe('WorkerManager', () => {
       const provider = createPriceProvider(engine);
       manager.setPriceProvider(provider);
 
-      const scope = Effect.runSync(Scope.make());
-      await manager.start(scope);
+      await manager.start();
 
       expect(manager.getStats().workersActive).toBe(1);
 
@@ -518,8 +462,7 @@ describe('WorkerManager', () => {
     it('should start workers without price provider', async () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
 
-      const scope = Effect.runSync(Scope.make());
-      await manager.start(scope);
+      await manager.start();
 
       expect(manager.getStats().workersActive).toBe(1);
 
@@ -534,12 +477,11 @@ describe('WorkerManager', () => {
       const provider = createPriceProvider(engine);
       manager.setPriceProvider(provider);
 
-      const scope = Effect.runSync(Scope.make());
-      await manager.start(scope);
+      await manager.start();
 
-      const updateEffect = await manager.subscribeToMarket('item-1');
+      const updatePromise = manager.subscribeToMarket('item-1');
 
-      expect(updateEffect).toBeDefined();
+      expect(updatePromise).toBeDefined();
 
       await manager.gracefulShutdown();
     });
@@ -550,12 +492,11 @@ describe('WorkerManager', () => {
       const provider = createPriceProvider(engine);
       manager.setPriceProvider(provider);
 
-      const scope = Effect.runSync(Scope.make());
-      await manager.start(scope);
+      await manager.start();
 
-      const updateEffect = await manager.subscribeToMarket('item-2');
+      const updatePromise = manager.subscribeToMarket('item-2');
 
-      expect(updateEffect).toBeDefined();
+      expect(updatePromise).toBeDefined();
 
       await manager.gracefulShutdown();
     });
@@ -566,7 +507,7 @@ describe('WorkerManager', () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
 
       let callCount = 0;
-      const failingProcessor: typeof processor = async (order: Order) => {
+      const failingProcessor: OrderProcessor = async (order: Order) => {
         callCount++;
         if (callCount < 2) {
           throw new Error('Simulated processor failure');
@@ -574,10 +515,9 @@ describe('WorkerManager', () => {
         return [];
       };
 
-      manager.setOrderProcessor(failingProcessor as any);
+      manager.setOrderProcessor(failingProcessor);
 
-      const scope = Effect.runSync(Scope.make());
-      await manager.start(scope);
+      await manager.start();
 
       const order: Order = {
         id: 'order-1',
@@ -600,15 +540,16 @@ describe('WorkerManager', () => {
   });
 
   describe('Acquire Worker Manager', () => {
-    it('should acquire worker manager with scope', async () => {
-      const manager = createWorkerManager({ workerPoolSize: 1 });
+    it('should acquire worker manager', async () => {
+      const manager = await acquireWorkerManager({ workerPoolSize: 1 });
       expect(manager).toBeInstanceOf(WorkerManager);
+      expect(manager.getStats().workersActive).toBe(1);
+
+      await manager.gracefulShutdown();
     });
 
     it('should start workers on acquisition', async () => {
-      const manager = createWorkerManager({ workerPoolSize: 2 });
-      const scope = Effect.runSync(Scope.make());
-      await manager.start(scope);
+      const manager = await acquireWorkerManager({ workerPoolSize: 2 });
 
       expect(manager.getStats().workersActive).toBe(2);
 
@@ -623,8 +564,7 @@ describe('WorkerManager', () => {
       const processor = createOrderProcessor(orderBook);
       manager.setOrderProcessor(processor);
 
-      const scope = Effect.runSync(Scope.make());
-      await manager.start(scope);
+      await manager.start();
 
       const order: Order = {
         id: 'order-1',

@@ -1,5 +1,3 @@
-import type { Effect } from 'effect';
-
 import type { Order, OrderResult, Player } from './types';
 
 export interface MarketUpdate {
@@ -11,15 +9,15 @@ export interface MarketUpdate {
 }
 
 export interface OrderSubmissionInterface {
-  submitOrder(order: Order): Effect.Effect<unknown, unknown, OrderResult>;
+  submitOrder(order: Order): Promise<OrderResult>;
 }
 
 export interface MarketDataInterface {
-  subscribeToMarket(itemId: string): Effect.Effect<unknown, unknown, Stream<MarketUpdate>>;
+  subscribeToMarket(itemId: string): Stream<MarketUpdate>;
 }
 
 export interface PlayerStateInterface {
-  getPlayerState(playerId: string): Effect.Effect<unknown, unknown, Player>;
+  getPlayerState(playerId: string): Promise<Player>;
 }
 
 export interface Stream<A> {
