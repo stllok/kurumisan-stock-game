@@ -478,7 +478,7 @@ describe('WorkerPool', () => {
       expect(results.has('item-1')).toBe(true);
       expect(results.has('item-2')).toBe(true);
 
-      for (const [itemId, response] of results) {
+      for (const [_itemId, response] of results) {
         expect(response.type).toBe('tick-completed');
         if (response.type === 'tick-completed') {
           expect(typeof response.currentPrice).toBe('number');

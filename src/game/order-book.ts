@@ -15,9 +15,9 @@ import type { Order, Trade } from './types';
  */
 class PriorityQueue<T> {
   private heap: T[] = [];
-  private comparator: (a: T, b: T) => number;
+  private comparator: (_a: T, _b: T) => number;
 
-  constructor(comparator: (a: T, b: T) => number) {
+  constructor(comparator: (_a: T, _b: T) => number) {
     this.comparator = comparator;
   }
 
@@ -43,21 +43,21 @@ class PriorityQueue<T> {
       return undefined;
     }
     const root = this.heap[0];
-    const last = this.heap.pop()!;
-    if (this.heap.length > 0) {
+    const last = this.heap.pop();
+    if (last !== undefined && this.heap.length > 0) {
       this.heap[0] = last;
       this.bubbleDown(0);
     }
     return root;
   }
 
-  remove(predicate: (item: T) => boolean): boolean {
+  remove(predicate: (_item: T) => boolean): boolean {
     const index = this.heap.findIndex(predicate);
     if (index === -1) {
       return false;
     }
-    const last = this.heap.pop()!;
-    if (index < this.heap.length) {
+    const last = this.heap.pop();
+    if (last !== undefined && index < this.heap.length) {
       this.heap[index] = last;
       this.bubbleUp(index);
       this.bubbleDown(index);
@@ -118,7 +118,7 @@ export class OrderBook {
   private bids: PriorityQueue<Order>;
   private asks: PriorityQueue<Order>;
   private orders: Map<string, Order>; // orderId -> Order for O(1) lookup
-  private nextTradeId: number = 0;
+  private nextTradeId = 0;
 
   constructor() {
     // Bids: Max heap on price (highest first), min heap on timestamp (for same price, earliest first)

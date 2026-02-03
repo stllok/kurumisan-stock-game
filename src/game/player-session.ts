@@ -29,8 +29,8 @@ export class PlayerSession {
    * @param initialBalance - Starting balance (default: 0)
    */
   constructor(
-    private readonly playerId: string,
-    initialBalance: number = 0
+    private readonly _playerId: string,
+    initialBalance = 0
   ) {
     this.state = {
       balance: initialBalance,
@@ -42,7 +42,7 @@ export class PlayerSession {
    * Get the player ID
    */
   getPlayerId(): string {
-    return this.playerId;
+    return this._playerId;
   }
 
   /**
@@ -155,7 +155,7 @@ export class PlayerSession {
    */
   toPlayer(): { id: string; balance: number; inventory: Map<string, number> } {
     return {
-      id: this.playerId,
+      id: this._playerId,
       balance: this.state.balance,
       inventory: new Map(this.state.inventory),
     };
@@ -165,6 +165,6 @@ export class PlayerSession {
 /**
  * Factory function to create a player session
  */
-export function createPlayerSession(playerId: string, initialBalance: number = 0): PlayerSession {
+export function createPlayerSession(playerId: string, initialBalance = 0): PlayerSession {
   return new PlayerSession(playerId, initialBalance);
 }

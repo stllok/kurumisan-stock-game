@@ -13,7 +13,6 @@
 
 import { describe, it, expect, afterEach } from 'bun:test';
 import { WorkerPool, createWorkerPool } from '../market-worker';
-import { OrderBook } from '../order-book';
 import { MarketEngine } from '../market-engine';
 import { createPlayerSession } from '../player-session';
 import type { Order } from '../types';
@@ -306,7 +305,7 @@ describe('Integration Tests', () => {
           timestamp: Date.now() + i,
           status: 'pending',
         };
-        orderPromises.push(pool.submitOrder(buyOrder).then(() => {}));
+        orderPromises.push(pool.submitOrder(buyOrder).then(() => undefined));
 
         const sellOrder: Order = {
           id: `sell-${playerId}`,
@@ -319,7 +318,7 @@ describe('Integration Tests', () => {
           timestamp: Date.now() + i + 0.5,
           status: 'pending',
         };
-        orderPromises.push(pool.submitOrder(sellOrder).then(() => {}));
+        orderPromises.push(pool.submitOrder(sellOrder).then(() => undefined));
       }
 
       await Promise.all(orderPromises);
@@ -427,7 +426,7 @@ describe('Integration Tests', () => {
         engine.recordOrder('buy', 10);
       }
 
-      const initialPrice = engine.getCurrentPrice();
+      const _initialPriceBuy = engine.getCurrentPrice();
       engine.updatePrice();
       const priceAfterBuys = engine.getCurrentPrice();
 
@@ -441,7 +440,7 @@ describe('Integration Tests', () => {
         engine.recordOrder('sell', 10);
       }
 
-      const initialPrice = engine.getCurrentPrice();
+      const _initialPriceSell = engine.getCurrentPrice();
       engine.updatePrice();
       const priceAfterSells = engine.getCurrentPrice();
 
@@ -622,7 +621,7 @@ describe('Integration Tests', () => {
           timestamp: Date.now() + i,
           status: 'pending',
         };
-        orderPromises.push(pool.submitOrder(order).then(() => {}));
+        orderPromises.push(pool.submitOrder(order).then(() => undefined));
       }
 
       await Promise.all(orderPromises);
@@ -668,7 +667,7 @@ describe('Integration Tests', () => {
           timestamp: Date.now(),
           status: 'pending',
         };
-        orderPromises.push(pool.submitOrder(order).then(() => {}));
+        orderPromises.push(pool.submitOrder(order).then(() => undefined));
       }
 
       await Promise.all(orderPromises);

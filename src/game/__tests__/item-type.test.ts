@@ -62,7 +62,7 @@ describe('item-type', () => {
       // TypeScript should prevent this at compile time
       // At runtime, the object has readonly properties
       expect(() => {
-        (item as any).itemId = 'changed';
+        (item as unknown as { itemId: string }).itemId = 'changed';
       }).not.toThrow();
 
       // Metadata should be a copy, not the original

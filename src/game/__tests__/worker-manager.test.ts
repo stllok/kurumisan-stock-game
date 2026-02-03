@@ -9,7 +9,7 @@ import {
 } from '../worker-manager';
 import { OrderBook } from '../order-book';
 import { MarketEngine } from '../market-engine';
-import type { Order, Trade } from '../types';
+import type { Order } from '../types';
 
 describe('WorkerManager', () => {
   describe('Factory Functions', () => {
@@ -507,7 +507,7 @@ describe('WorkerManager', () => {
       const manager = createWorkerManager({ workerPoolSize: 1 });
 
       let callCount = 0;
-      const failingProcessor: OrderProcessor = async (order: Order) => {
+      const failingProcessor: OrderProcessor = async (_order: Order) => {
         callCount++;
         if (callCount < 2) {
           throw new Error('Simulated processor failure');

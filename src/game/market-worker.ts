@@ -62,8 +62,8 @@ export class MarketWorker {
   readonly itemId: string;
   private worker: Worker | null = null;
   private state: MarketWorkerState;
-  private pendingResponses: Map<number, (response: WorkerResponse) => void>;
-  private nextMessageId: number = 0;
+  private pendingResponses: Map<number, (_response: WorkerResponse) => void>;
+  private nextMessageId = 0;
   private restartTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(itemId: string, initialPrice: number) {
@@ -112,7 +112,7 @@ export class MarketWorker {
     }
 
     // Reject all pending responses
-    for (const [messageId, callback] of this.pendingResponses) {
+    for (const [_messageId, callback] of this.pendingResponses) {
       callback({ type: 'error', message: 'Worker stopped' });
     }
     this.pendingResponses.clear();
@@ -291,7 +291,7 @@ export class MarketWorker {
  */
 export class WorkerPool {
   private workers: Map<string, MarketWorker>;
-  private isRunning: boolean = false;
+  private isRunning = false;
 
   constructor() {
     this.workers = new Map();

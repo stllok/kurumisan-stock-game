@@ -28,8 +28,8 @@ export class MarketEngine {
   private config: MarketEngineConfig;
   private currentPrice: number;
   private itemId: string;
-  private buyVolume: number = 0;
-  private sellVolume: number = 0;
+  private buyVolume = 0;
+  private sellVolume = 0;
   private orderTimestamps: number[] = [];
 
   /**

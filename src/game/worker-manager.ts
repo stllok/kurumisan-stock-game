@@ -65,9 +65,9 @@ const DEFAULT_CONFIG: WorkerManagerConfig = {
   workerPoolSize: 4,
 };
 
-export type OrderProcessor = (order: Order) => Promise<Trade[]>;
+export type OrderProcessor = (_order: Order) => Promise<Trade[]>;
 export type PriceProvider = (
-  itemId: string
+  _itemId: string
 ) => Promise<{ price: number; bestBid: number; bestAsk: number }>;
 
 class BoundedQueue<T> {
@@ -103,7 +103,7 @@ class BoundedQueue<T> {
       });
     }
 
-    const item = this.queue.shift();
+    const item = this.queue.shift() as T;
     this.size--;
 
     if (this.notFull) {
@@ -112,7 +112,7 @@ class BoundedQueue<T> {
       notify();
     }
 
-    return item!;
+    return item;
   }
 
   isEmpty(): boolean {
@@ -124,12 +124,12 @@ class BoundedQueue<T> {
   }
 }
 
-type MarketUpdateHandler = (update: MarketUpdate) => void;
+type MarketUpdateHandler = (_update: MarketUpdate) => void;
 
 class MarketUpdateSubscriber {
   private updates: MarketUpdate[] = [];
-  private handlers: Set<MarketUpdateHandler> = new Set();
-  private pendingResolvers: Map<number, (update: MarketUpdate) => void> = new Map();
+  private handlers = new Set<MarketUpdateHandler>();
+  private pendingResolvers = new Map<number, (update: MarketUpdate) => void>();
   private pendingIdCounter = 0;
 
   publish(update: MarketUpdate): void {
@@ -154,7 +154,7 @@ class MarketUpdateSubscriber {
     };
   }
 
-  async waitForItem(itemId: string): Promise<MarketUpdate> {
+  async waitForItem(_itemId: string): Promise<MarketUpdate> {
     const id = this.pendingIdCounter++;
     return new Promise((resolve) => {
       this.pendingResolvers.set(id, resolve);
@@ -167,12 +167,12 @@ export class WorkerManager {
   private orderQueue: BoundedQueue<WorkerTask>;
   private marketUpdates: MarketUpdateSubscriber;
   private stats: WorkerStats;
-  private workerAbortControllers: Map<number, AbortController> = new Map();
+  private workerAbortControllers = new Map<number, AbortController>();
   private orderProcessor?: OrderProcessor;
   private priceProvider?: PriceProvider;
   private tickInterval?: NodeJS.Timeout;
   private startTime: number = Date.now();
-  private isRunning: boolean = false;
+  private isRunning = false;
   private readonly eventEmitter: EventEmitter;
 
   constructor(config?: Partial<WorkerManagerConfig>) {
@@ -235,7 +235,7 @@ export class WorkerManager {
           break;
         }
 
-        const startTime = Date.now();
+        const _startTime = Date.now();
 
         if (task.type === 'process-order') {
           await this.processOrderWithRetry(task);

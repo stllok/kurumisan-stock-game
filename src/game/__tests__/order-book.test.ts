@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { OrderBook } from '../order-book';
-import type { Order, OrderStatus, OrderType, OrderSide } from '../types';
+import type { Order } from '../types';
 
 describe('OrderBook', () => {
   let orderBook: OrderBook;

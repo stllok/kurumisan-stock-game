@@ -9,17 +9,17 @@ export interface MarketUpdate {
 }
 
 export interface OrderSubmissionInterface {
-  submitOrder(order: Order): Promise<OrderResult>;
+  submitOrder(_order: Order): Promise<OrderResult>;
 }
 
 export interface MarketDataInterface {
-  subscribeToMarket(itemId: string): Stream<MarketUpdate>;
+  subscribeToMarket(_itemId: string): Stream<MarketUpdate>;
 }
 
 export interface PlayerStateInterface {
-  getPlayerState(playerId: string): Promise<Player>;
+  getPlayerState(_playerId: string): Promise<Player>;
 }
 
 export interface Stream<A> {
-  subscribe(onNext: (a: A) => void): void;
+  subscribe(_onNext: (_a: A) => void): void;
 }
