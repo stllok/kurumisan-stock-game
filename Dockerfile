@@ -1,6 +1,6 @@
 # Multi-stage build for optimal image size
 # Stage 1: Build the application
-FROM oven-sh/bun:latest AS builder
+FROM oven/bun:latest AS builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY . .
 RUN bun build ./src/index.ts --outdir ./build --target bun --minify
 
 # Stage 2: Production runtime
-FROM oven-sh/bun:latest AS runtime
+FROM oven/bun:latest AS runtime
 
 WORKDIR /app
 
