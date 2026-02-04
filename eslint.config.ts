@@ -6,7 +6,16 @@ import globals from 'globals';
 export default [
   // Global ignores
   {
-    ignores: ['node_modules/**', 'dist/**', 'build/**', '.next/**', 'coverage/**', '*.min.js'],
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'build/**',
+      '.next/**',
+      'coverage/**',
+      '*.min.js',
+      'web/.svelte-kit/**',
+      'web/.svelte-kit/types/**',
+    ],
   },
 
   // Base JS recommended rules
